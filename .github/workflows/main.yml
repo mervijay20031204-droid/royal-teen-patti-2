@@ -11,54 +11,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Install Capacitor
-        run: npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Build web app
-        run: npm run build
-
-      - name: Create Capacitor config
+      - name: Unzip Android project
         run: |
-          cat > capacitor.config.ts <<'EOF'
-          import type { CapacitorConfig } from '@capacitor/cli';
+          rm -rf project
+          mkdir project
+          unzip -q "royal-teen-patti (1).zip" -d project
 
-          const config: CapacitorConfig = {
-            appId: 'com.royal.teenpatti',
-            appName: 'Royal Teen Patti',
-            webDir: 'dist'
-          };
+      - name: Find Gradle wrapper
+        id: gradle
+        run: |
+          GRADLEW=$(find project -type f -name gradlew | head -n 1)
 
-          export default config;
-          EOF
+          if [ -z "$GRADLEW" ]; then
+            echo "gradlew not found"
+            exit 1
+          fi
 
-      - name: Create Android project
-        run: npx cap add android
+          chmod +x "$GRADLEW"
 
-      - name: Sync Android
-        run: npx cap sync android
+          echo "dir=$(dirname "$GRADLEW")" >> "$GITHUB_OUTPUT"
+          echo "file=$(basename "$GRADLEW")" >> "$GITHUB_OUTPUT"
 
       - name: Build AAB
         run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew bundleRelease
+          cd "${{ steps.gradle.outputs.dir }}"
+          ./"${{ steps.gradle.outputs.file }}" bundleRelease
+
+      - name: Find AAB
+        run: |
+          find project -type f -name "*.aab" -print
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: royal-teen-patti-aab
-          path: android/app/build/outputs/bundle/release/*.aab
+          path: project/**/*.aab
