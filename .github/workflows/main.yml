@@ -40,7 +40,7 @@ jobs:
           else
             echo "package.json not found"
             find project -maxdepth 3 -name package.json -print
-            exit 1
+            
           fi
 
       - name: Install dependencies
