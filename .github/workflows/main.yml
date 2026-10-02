@@ -5,14 +5,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -23,25 +23,29 @@ jobs:
           mkdir project
           unzip -q "royal-teen-patti (1).zip" -d project
 
-      - name: Find Gradle wrapper
-        id: gradle
+      - name: Find Android project
+        id: android
         run: |
-          GRADLEW=$(find project -type f -name gradlew | head -n 1)
+          SETTINGS=$(find project -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1)
 
-          if [ -z "$GRADLEW" ]; then
-            echo "gradlew not found"
+          if [ -z "$SETTINGS" ]; then
+            echo "Android project settings.gradle not found"
+            find project -maxdepth 4 -type f | head -n 100
             exit 1
           fi
 
-          chmod +x "$GRADLEW"
+          DIR=$(dirname "$SETTINGS")
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+          echo "Android project found in: $DIR"
 
-          echo "dir=$(dirname "$GRADLEW")" >> "$GITHUB_OUTPUT"
-          echo "file=$(basename "$GRADLEW")" >> "$GITHUB_OUTPUT"
+      - name: Check Gradle
+        run: |
+          gradle --version
 
       - name: Build AAB
         run: |
-          cd "${{ steps.gradle.outputs.dir }}"
-          ./"${{ steps.gradle.outputs.file }}" bundleRelease
+          cd "${{ steps.android.outputs.dir }}"
+          gradle bundleRelease --no-daemon
 
       - name: Find AAB
         run: |
