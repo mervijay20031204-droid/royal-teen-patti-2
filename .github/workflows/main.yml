@@ -43,7 +43,7 @@ jobs:
             
           fi
 
-      - name: Install dependencies
+      - npm install --legacy-peer-deps
         working-directory: project
         run: npm install
 
