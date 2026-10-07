@@ -50,7 +50,7 @@ jobs:
       - name: Install Capacitor
         working-directory: project
         run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
 
       - name: Build web app
         working-directory: project
