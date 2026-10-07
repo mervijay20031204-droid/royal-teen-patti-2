@@ -43,9 +43,9 @@ jobs:
             
           fi
 
-      - npm install --legacy-peer-deps
+      - name: Install dependencies
         working-directory: project
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install Capacitor
         working-directory: project
